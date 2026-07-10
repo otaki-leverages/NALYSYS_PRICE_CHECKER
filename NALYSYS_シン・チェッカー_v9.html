@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NALYSYS シン・チェッカー v9</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
+  .wrap{max-width:760px;margin:0 auto}
+  header{background:#1e3a5f;color:#fff;border-radius:12px;padding:20px 26px;margin-bottom:16px}
+  header h1{font-size:20px}
+  header p{font-size:13px;opacity:.85;margin-top:4px}
+  .ver{display:inline-block;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:2px 10px;margin-left:8px}
+  .card{background:#fff;border-radius:12px;padding:18px 22px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:16px}
+  .card h2{font-size:15px;color:#1e3a5f;border-left:4px solid #2563eb;padding-left:10px;margin-bottom:14px}
+  .row{margin-bottom:12px}
+  label.l{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:4px}
+  label.l .req{color:#dc2626;font-size:11px;margin-left:4px}
+  label.l .opt{color:#9ca3af;font-size:11px;margin-left:4px}
+  input[type=text],input[type=number],input[type=date],select{
+    width:100%;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:7px;font-size:14px;color:#1f2937;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:#2563eb}
+  .mini{font-size:12px;color:#6b7280;margin-top:4px}
+  .pricebox{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 12px;font-size:13px;color:#0c4a6e;margin-top:6px}
+  .hidden{display:none!important}
+  .verdict{border-radius:12px;padding:18px 22px;margin-bottom:16px;font-size:15px;font-weight:700}
+  .v-ok{background:#ecfdf5;border:2px solid #10b981;color:#047857}
+  .v-boss{background:#fff7ed;border:2px solid #f59e0b;color:#b45309}
+  .v-special{background:#fef2f2;border:2px solid #ef4444;color:#b91c1c}
+  .verdict .gl{font-size:13px;font-weight:600;margin-top:6px}
+  .verdict ul{margin:6px 0 0 18px;font-size:13px;font-weight:500}
+  .out{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;font-family:"SF Mono",Consolas,monospace;font-size:13px;white-space:pre-wrap;line-height:1.7;margin-top:8px}
+  .btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px}
+  .btn:hover{background:#1d4ed8}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  table.tier{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+  table.tier th,table.tier td{padding:5px 8px;border-bottom:1px solid #eef2f7;text-align:left}
+  table.tier th{background:#f8fafc;font-weight:700}
+  table.tier tr.cur{background:#ecfdf5;font-weight:700}
+  .subbox{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-top:6px}
+  .prod{border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .prod>label{cursor:pointer;font-size:13px;font-weight:600}
+  .drow{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #f1f5f9;padding:8px 0;flex-wrap:wrap}
+  .drow:last-child{border-bottom:none}
+  .dname{font-size:13px;font-weight:600;color:#1e3a5f}
+  .dbase{font-size:12px;color:#6b7280;font-weight:400;margin-left:6px}
+  .dctrl{font-size:12px;color:#374151;white-space:nowrap}
+  .dctrl input{display:inline-block;width:96px;padding:5px 6px;text-align:right}
+  .dctrl input.fr{width:56px}
+  .foot{text-align:center;color:#9ca3af;font-size:11px;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v9</span></h1>
+    <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
+  </header>
+
+  <div id="verdict" class="verdict v-ok">入力すると判定が表示されます。</div>
+
+  <!-- 1. 契約期間 -->
+  <div class="card">
+    <h2>1. 契約期間</h2>
+    <div class="two">
+      <div><label class="l">契約開始日<span class="req">必須</span></label><input type="date" id="start"></div>
+      <div><label class="l">契約終了日<span class="req">必須</span></label><input type="date" id="end"></div>
+    </div>
+    <div class="pricebox" id="term-info" style="margin-top:8px">—</div>
+    <div class="mini">開始日・終了日から契約期間（ヶ月）を自動計算します。基本1年＋自動更新（例：2026/03/01〜2027/02/28＝12ヶ月）。</div>
+    <div class="two" style="margin-top:10px">
+      <div><label class="l">見積書有効期限<span class="opt">見積書作成時</span></label><input type="date" id="quote-exp"></div>
+      <div><label class="l">申込期限<span class="opt">申込書作成時</span></label><input type="date" id="apply-exp"></div>
+    </div>
+  </div>
+
+  <!-- 2. 自動更新 -->
+  <div class="card">
+    <h2>2. 自動更新</h2>
+    <div class="seg" id="renew">
+      <label><input type="radio" name="renew" value="あり" checked><span>自動更新あり（基本）</span></label>
+      <label><input type="radio" name="renew" value="なし"><span>自動更新なし</span></label>
+    </div>
+    <div class="mini">基本は自動更新あり。自動更新なしにする場合は大滝さん承認が必要です。</div>
+  </div>
+
+  <!-- 3. プロダクト選択 -->
+  <div class="card">
+    <h2>3. プロダクト選択</h2>
+    <p class="mini" style="margin-bottom:10px">チェックすると設定が開きます。複数選択可。割引・無料は「5. 割引・無料」でプランごとに設定します。</p>
+
+    <div class="prod">
+      <label><input type="checkbox" id="chk-ai"> AI面接</label>
+      <div id="cfg-ai" class="subbox hidden">
+        <div class="row">
+          <label class="l">プラン</label>
+          <select id="ai-plan">
+            <option value="ticket">① チケット制</option>
+            <option value="flat">③ 使い放題（Tier選択）</option>
+          </select>
+        </div>
+        <div id="ai-flat" class="hidden">
+          <div class="two">
+            <div><label class="l">使い放題 正社員 Tier</label><select id="ai-flat-se"></select></div>
+            <div><label class="l">使い放題 アルバイト Tier</label><select id="ai-flat-pt"></select></div>
+          </div>
+        </div>
+        <div id="ai-ticket" class="hidden">
+          <div class="row"><label class="l">月額固定（年間基本料金）</label><input type="number" id="tk-fixed" value="30000" step="1000" min="0"></div>
+          <div class="two">
+            <div><label class="l">チケット 正社員</label><select id="tk-se"></select></div>
+            <div><label class="l">チケット 非正規</label><select id="tk-pt"></select></div>
+          </div>
+          <div class="mini">年間契約・月額×12で請求。生成結果は年間金額で表示します。</div>
+        </div>
+        <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
+          <label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-ai-custom"> オプション：AI面接 カスタム費用</label>
+          <input type="number" id="ai-custom-fee" value="300000" step="10000" min="0" class="hidden" style="margin-top:6px">
+        </div>
+        <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
+          <label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-shorui"> オプション：書類選考チケット</label>
+          <select id="shorui-sel" class="hidden" style="margin-top:6px"></select>
+        </div>
+        <div class="pricebox" id="ai-price" style="margin-top:8px">—</div>
+      </div>
+    </div>
+
+    <div class="prod">
+      <label><input type="checkbox" id="chk-sken"> 適性検査</label>
+      <div id="cfg-sken" class="subbox hidden">
+        <label class="l">受検数（件/月）</label>
+        <input type="number" id="sken-qty" value="20" min="0">
+        <div class="pricebox">1件 ¥2,500（従量課金・正社員/アルバイト区別なし・ディスカウント可）</div>
+      </div>
+    </div>
+
+    <div class="prod">
+      <label><input type="checkbox" id="chk-nen"> 年末調整</label>
+      <div id="cfg-nen" class="subbox hidden">
+        <label class="l">アカウント数</label>
+        <input type="number" id="nen-acct" value="100" min="0">
+        <div class="pricebox">1アカウント ¥350（年額）</div>
+      </div>
+    </div>
+
+    <div id="ladder-products"></div>
+  </div>
+
+  <!-- 3. 初期費用 -->
+  <div class="card">
+    <h2>4. 初期費用</h2>
+    <div class="row">
+      <label class="l">初期費用（円）</label>
+      <input type="number" id="init-fee" value="200000" step="10000" min="0">
+      <div class="mini">下の「初期費用を含めるプロダクト」を選ぶと入力できます（免除する場合は 0）。</div>
+    </div>
+    <div class="row">
+      <label class="l">初期費用を含めるプロダクト</label>
+      <select id="init-product"></select>
+      <div class="mini">「2. プロダクト選択」で選んだものから選択。生成結果に「初期費用（プロダクト名）」と表示されます。</div>
+    </div>
+  </div>
+
+  <!-- 4. 割引・無料 -->
+  <div class="card">
+    <h2>5. 割引・無料（プランごと）</h2>
+    <div id="disc-list"><div class="mini">プロダクトを選択すると、ここに各プランの割引・無料を設定できます。</div></div>
+    <div class="mini" style="margin-top:8px">値引きは金額（円）で入力。定価から差し引いた「割引」行で表現します。月額は無料◯ヶ月分、従量は無料◯件分を相殺します。</div>
+  </div>
+
+  <!-- 6. その他 -->
+  <div class="card">
+    <h2>6. その他</h2>
+    <div class="row">
+      <label class="l">無料分受検数記載</label>
+      <div class="two">
+        <div><label class="l" style="font-size:12px">対象月（何月分から）</label><input type="text" id="free-from" placeholder="例：5月分"></div>
+        <div><label class="l" style="font-size:12px">無料件数</label><input type="number" id="free-cnt" min="0" placeholder="例：20"></div>
+      </div>
+      <div id="free-note-msg" class="mini hidden">※「適性検査」を選択すると、無料分受検数（対象月・件数）を入力できます。</div>
+    </div>
+  </div>
+
+  <!-- 7. 生成結果 -->
+  <div class="card">
+    <h2>7. 生成結果</h2>
+    <div style="font-size:12px;color:#475569;margin-bottom:8px" id="term-head"></div>
+    <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:4px">A. 事務向け（定価・割引つき）</div>
+    <div class="out" id="out-jimu">—</div>
+    <button class="btn" onclick="copyText('out-jimu')">事務向けをコピー</button>
+    <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin:16px 0 4px">B. LD向け（契約期間・期限・割引内訳つき）</div>
+    <div class="out" id="out-ld">—</div>
+    <button class="btn" onclick="copyText('out-ld')">LD向けをコピー</button>
+  </div>
+
+  <div class="foot">NALYSYS シン・チェッカー v9 ／ プラン判定ツール（社内用）</div>
+</div>
+
+<script>
+const AI_MONTHLY={fixed:30000,se:3000,pt:1500};
+const AI_SE_TIERS=[{name:"ライト",cap:20,price:80000},{name:"スタンダード",cap:50,price:175000},{name:"プロ",cap:100,price:300000},{name:"プレミアム",cap:300,price:750000},{name:"エンタープライズ",cap:null,price:null}];
+const AI_PT_TIERS=[{name:"ライト",cap:20,price:40000},{name:"スタンダード",cap:50,price:87500},{name:"プロ",cap:100,price:150000},{name:"アドバンス",cap:300,price:420000},{name:"プレミアム",cap:500,price:625000},{name:"エンタープライズ",cap:null,price:null}];
+const AI_TICKET_SE=[{c:100,m:25000},{c:200,m:48500},{c:300,m:70000},{c:400,m:90000},{c:500,m:108500},{c:600,m:125000},{c:700,m:140000},{c:800,m:153500},{c:900,m:165000},{c:1000,m:175000},{c:1500,m:250000},{c:2000,m:316500},{c:2500,m:375000},{c:3000,m:425000},{c:4000,m:533500},{c:5000,m:625000}];
+const AI_TICKET_SE_OVER="5,000件超";
+const AI_TICKET_PT=[{c:100,m:12500},{c:200,m:24000},{c:300,m:35000},{c:500,m:54000},{c:750,m:75000},{c:1000,m:91500},{c:1500,m:125000},{c:2000,m:150000},{c:3000,m:200000},{c:5000,m:291500},{c:7500,m:375000},{c:10000,m:416500}];
+const AI_TICKET_PT_OVER="10,000件超";
+const SHORUI=[{c:500,m:12500},{c:600,m:14700},{c:700,m:16800},{c:800,m:18800},{c:900,m:20700},{c:1000,m:22500},{c:1500,m:31125},{c:2000,m:38000},{c:2500,m:43750},{c:3000,m:48750},{c:4000,m:60000},{c:5000,m:70000},{c:6000,m:81000},{c:7000,m:92750},{c:8000,m:104000},{c:9000,m:114750},{c:10000,m:125000}];
+const SHORUI_OVER="10,000件超";
+const LADDERS={
+  moti:{label:"モチベーション管理",tiers:[{cap:30,price:80000},{cap:50,price:100000},{cap:100,price:150000},{cap:200,price:230000},{cap:300,price:300000},{cap:400,price:370000},{cap:500,price:450000},{cap:1000,price:650000},{cap:null,price:null}]},
+  remote1on1:{label:"リモート1on1",note:"モチベーション管理オプション（同時利用のみ）",tiers:[{cap:30,price:11250},{cap:50,price:20000},{cap:100,price:37500},{cap:200,price:75000},{cap:300,price:125000},{cap:400,price:175000},{cap:500,price:225000},{cap:1000,price:375000},{cap:null,price:null}]},
+  es:{label:"エンゲージメントサーベイ",note:"モチベーション管理プラン（通常料金とは別）",tiers:[{cap:100,price:30000},{cap:200,price:60000},{cap:500,price:150000},{cap:1000,price:300000},{cap:null,price:null}]},
+  talent:{label:"タレントマネジメント",note:"モチベーション管理と同時利用のみ",tiers:[{cap:100,price:10000},{cap:300,price:20000},{cap:500,price:30000},{cap:1000,price:40000},{cap:null,price:null}]},
+  hr:{label:"人事評価",tiers:[{cap:100,price:10000},{cap:200,price:20000},{cap:300,price:30000},{cap:400,price:40000},{cap:500,price:50000},{cap:1000,price:100000},{cap:null,price:null}]},
+  roumu:{label:"労務管理（月額）",tiers:[{cap:30,price:10000},{cap:50,price:15000},{cap:100,price:30000},{cap:200,price:60000},{cap:300,price:90000},{cap:400,price:120000},{cap:500,price:150000},{cap:1000,price:300000},{cap:null,price:null}]},
+};
+const LK=["moti","talent","hr","roumu"];
+
+const $=id=>document.getElementById(id);
+const yen=n=>"¥"+Math.round(n).toLocaleString();
+const val=id=>$(id)?$(id).value:'';
+const num=id=>$(id)?(parseInt($(id).value,10)||0):0;
+function selTier(q,tiers){if(q<=0)return null;for(const t of tiers){if(t.cap!==null&&q<=t.cap)return t;}return tiers[tiers.length-1];}
+function monthsBetween(s,e){const a=new Date(s);const b=new Date(e);b.setDate(b.getDate()+1);let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()<a.getDate())m-=1;return m;}
+function jpDate(s){const d=new Date(s);return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;}
+function jpRange(sv,ev,m){const a=new Date(sv),b=new Date(ev);const e=(a.getFullYear()===b.getFullYear())?`${b.getMonth()+1}月${b.getDate()}日`:jpDate(ev);return `${jpDate(sv)} - ${e}（${m}ヶ月）`;}
+
+const DISC={};
+let lastSig='';
+
+function ladderInner(k){
+  return `<label class="l" style="font-size:12px;margin-bottom:4px">利用人数</label>
+    <input type="number" id="users-${k}" value="100" min="1">
+    <div class="pricebox" id="price-${k}">—</div>
+    <table class="tier"><thead><tr><th>人数</th><th>月額（定価）</th></tr></thead><tbody id="tier-${k}"></tbody></table>`;
+}
+function buildLadders(){
+  $('ladder-products').innerHTML=LK.map(k=>{
+    const L=LADDERS[k];const note=L.note?` <span style="color:#9ca3af;font-size:11px">※${L.note}</span>`:'';
+    return `<div class="prod"><label><input type="checkbox" id="chk-${k}"> ${L.label}${note}</label><div id="cfg-${k}" class="subbox hidden">${ladderInner(k)}</div></div>`;
+  }).join('');
+  const R=LADDERS.remote1on1;
+  $('cfg-moti').insertAdjacentHTML('beforeend',
+    `<div style="margin-top:10px;border-top:1px dashed #cbd5e1;padding-top:10px">`+
+    `<label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-remote1on1"> オプション：${R.label}</label>`+
+    `<div id="cfg-remote1on1" class="subbox hidden">${ladderInner('remote1on1')}</div></div>`);
+  const E=LADDERS.es;
+  $('cfg-moti').insertAdjacentHTML('beforeend',
+    `<div style="margin-top:10px;border-top:1px dashed #cbd5e1;padding-top:10px">`+
+    `<label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-es"> プラン：${E.label}（通常料金とは別）</label>`+
+    `<div id="cfg-es" class="subbox hidden">${ladderInner('es')}</div></div>`);
+}
+function fillTierSelect(id,tiers){
+  $(id).innerHTML=['<option value="-1">なし</option>'].concat(
+    tiers.map((t,i)=>{const lab=t.cap?`${t.name}（〜${t.cap}件）`:`${t.name}（上限超）`;const price=t.price===null?'要見積':yen(t.price);return `<option value="${i}">${lab}：${price}</option>`;})).join('');
+}
+function fillTicketSelect(id,arr,over){
+  $(id).innerHTML=['<option value="-1">なし</option>']
+    .concat(arr.map((t,i)=>`<option value="${i}">${t.c.toLocaleString()}件：${yen(t.m*12)}/年</option>`))
+    .concat([`<option value="over">${over}（個別見積）</option>`]).join('');
+}
+function buildTickets(){
+  fillTicketSelect('tk-se',AI_TICKET_SE,AI_TICKET_SE_OVER);
+  fillTicketSelect('tk-pt',AI_TICKET_PT,AI_TICKET_PT_OVER);
+  fillTicketSelect('shorui-sel',SHORUI,SHORUI_OVER);
+}
+function buildInitProductSelect(){
+  const opts=[{v:'',t:'（指定なし）'}];
+  const reg=[['ai','AI面接'],['sken','適性検査'],['nen','年末調整'],['moti','モチベーション管理'],['hr','人事評価'],['roumu','労務管理'],['talent','タレントマネジメント'],['remote1on1','リモート1on1']];
+  reg.forEach(([k,nm])=>{const c=$('chk-'+k);if(c&&c.checked)opts.push({v:nm,t:nm});});
+  const sel=$('init-product');const cur=sel.value;
+  sel.innerHTML=opts.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+  if(opts.some(o=>o.v===cur))sel.value=cur;
+}
+function renderLadderTable(k,cur){
+  $('tier-'+k).innerHTML=LADDERS[k].tiers.map(t=>{
+    const lab=t.cap?('〜'+t.cap+'名'):'1,001名〜';const price=t.price===null?'要相談':yen(t.price);
+    const c=(cur&&t.cap===cur.cap&&t.price===cur.price)?'cur':'';
+    return `<tr class="${c}"><td>${lab}${c?' ⬅':''}</td><td>${price}</td></tr>`;
+  }).join('');
+}
+
+function collectLines(){
+  const lines=[];
+  $('chk-ai').checked?$('cfg-ai').classList.remove('hidden'):$('cfg-ai').classList.add('hidden');
+  if($('chk-ai').checked){
+    const plan=val('ai-plan');
+    $('ai-flat').classList.toggle('hidden',plan!=='flat');
+    $('ai-ticket').classList.toggle('hidden',plan!=='ticket');
+    if(plan==='flat'){
+      const si=parseInt(val('ai-flat-se'),10), pi=parseInt(val('ai-flat-pt'),10);
+      $('ai-price').textContent='Tierを選択してください';
+      if(si>=0){const t=AI_SE_TIERS[si];if(t.price===null)lines.push({key:'ai-flat-se',label:`使い放題 正社員（${t.name}）`,requote:true});else lines.push({key:'ai-flat-se',label:`使い放題 正社員（${t.name}・〜${t.cap}件）`,base:t.price,type:'monthly',qty:1});}
+      if(pi>=0){const t=AI_PT_TIERS[pi];if(t.price===null)lines.push({key:'ai-flat-pt',label:`使い放題 パート（${t.name}）`,requote:true});else lines.push({key:'ai-flat-pt',label:`使い放題 パート（${t.name}・〜${t.cap}件）`,base:t.price,type:'monthly',qty:1});}
+    } else {
+      $('ai-price').textContent='';
+      const tf=num('tk-fixed');
+      if(tf>0)lines.push({key:'ai-fixed',label:'基本料金（固定）',base:tf,type:'monthly',qty:1,nf:true,annual:true});
+      const sv2=val('tk-se'),pv2=val('tk-pt');
+      if(sv2==='over')lines.push({key:'tk-se',label:'チケット 正社員（5,000件超）',requote:true});
+      else if(parseInt(sv2,10)>=0){const t=AI_TICKET_SE[+sv2];lines.push({key:'tk-se',label:`チケット 正社員（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}
+      if(pv2==='over')lines.push({key:'tk-pt',label:'チケット 非正規（10,000件超）',requote:true});
+      else if(parseInt(pv2,10)>=0){const t=AI_TICKET_PT[+pv2];lines.push({key:'tk-pt',label:`チケット 非正規（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}
+    }
+    const acOn=$('chk-ai-custom').checked;$('ai-custom-fee').classList.toggle('hidden',!acOn);
+    if(acOn)lines.push({key:'ai-custom',label:'AI面接 カスタム費用',base:num('ai-custom-fee'),type:'oneoff',qty:1});
+    const shOn=$('chk-shorui').checked;$('shorui-sel').classList.toggle('hidden',!shOn);
+    if(shOn){const sv3=val('shorui-sel');if(sv3==='over')lines.push({key:'shorui',label:'書類選考チケット（10,000件超）',requote:true});else if(parseInt(sv3,10)>=0){const t=SHORUI[+sv3];lines.push({key:'shorui',label:`書類選考チケット（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}}
+  } else { $('ai-price').textContent='—'; }
+  // 適性検査（従量・区分なし・1件¥2,500）
+  const skenOn=$('chk-sken').checked;$('cfg-sken').classList.toggle('hidden',!skenOn);
+  if(skenOn)lines.push({key:'sken',label:'適性検査 受検料',base:2500,type:'juryo',qty:num('sken-qty')});
+  const nenOn=$('chk-nen').checked;$('cfg-nen').classList.toggle('hidden',!nenOn);
+  if(nenOn)lines.push({key:'nen',label:'年末調整',base:350,type:'oneoff',qty:num('nen-acct')});
+  const addLadder=(k)=>{
+    const users=num('users-'+k);const t=selTier(users,LADDERS[k].tiers);renderLadderTable(k,t);
+    const capLabel=t.cap?('〜'+t.cap+'名'):'1,001名〜';
+    if(t.price===null){$('price-'+k).textContent='要相談（個別見積）';lines.push({key:k,label:`${LADDERS[k].label}（${capLabel}）`,requote:true});}
+    else{$('price-'+k).textContent=`${capLabel} ／ 月額定価 ${yen(t.price)}`;lines.push({key:k,label:`${LADDERS[k].label}（${capLabel}）`,base:t.price,type:'monthly',qty:1});}
+  };
+  LK.forEach(k=>{const on=$('chk-'+k).checked;$('cfg-'+k).classList.toggle('hidden',!on);if(on)addLadder(k);});
+  const r1=$('chk-remote1on1').checked;$('cfg-remote1on1').classList.toggle('hidden',!r1);
+  if(r1&&$('chk-moti').checked)addLadder('remote1on1');
+  const esOn=$('chk-es').checked;$('cfg-es').classList.toggle('hidden',!esOn);
+  if(esOn&&$('chk-moti').checked)addLadder('es');
+  return lines;
+}
+
+function buildDiscUI(lines){
+  const host=$('disc-list');
+  if(!lines.length){host.innerHTML='<div class="mini">プロダクトを選択すると、ここに各プランの割引・無料を設定できます。</div>';return;}
+  host.innerHTML=lines.map(l=>{
+    if(l.requote)return `<div class="drow"><div class="dname">${l.label} <span class="dbase">要相談（割引対象外）</span></div></div>`;
+    const dv=DISC[l.key]||{amt:0,free:0};
+    let baseTxt,dctrl;
+    if(l.type==='monthly'){baseTxt=`${yen(l.base)}/月`;dctrl=`値引き <input type="number" id="dp-${l.key}" value="${dv.amt}" min="0" step="1000">円/月${l.nf?'':` ／ 無料 <input class="fr" type="number" id="df-${l.key}" value="${dv.free}" min="0" max="24">ヶ月`}`;}
+    else if(l.type==='juryo'){baseTxt=`${yen(l.base)}/件 ×${l.qty}件`;dctrl=`値引き <input type="number" id="dp-${l.key}" value="${dv.amt}" min="0" step="100">円/件 <span style="color:#9ca3af">（無料受検は「6. その他」で指定）</span>`;}
+    else{baseTxt=`${yen(l.base)}${l.qty>1?' ×'+l.qty:''}`;dctrl=`<span style="color:#9ca3af">割引対象外（月額費用のみ割引可）</span>`;}
+    return `<div class="drow"><div class="dname">${l.label} <span class="dbase">${baseTxt}</span></div><div class="dctrl">${dctrl}</div></div>`;
+  }).join('');
+}
+
+function render(){
+
+  // 契約期間
+  const sv=val('start'),ev=val('end');
+  let months=0,termLine;
+  if(sv&&ev){months=monthsBetween(sv,ev);const r=jpRange(sv,ev,months);termLine='契約期間：'+r;$('term-info').textContent=r;}
+  else{termLine='契約期間：（開始日・終了日を入力）';$('term-info').textContent='開始日・終了日を入力すると期間を自動計算します。';}
+
+  const lines=collectLines();
+  const sig=lines.map(l=>`${l.key}:${l.base||0}:${l.qty||0}:${l.requote?1:0}`).join('|');
+  if(sig!==lastSig){buildDiscUI(lines);lastSig=sig;}
+  lines.forEach(l=>{if(l.requote)return;DISC[l.key]={amt:num('dp-'+l.key),free:num('df-'+l.key)};});
+  const L={};lines.forEach(l=>L[l.key]=l);
+
+  // ガバナンス・フラグ
+  let flags=[],level='ok',maxPct=0;
+  const eff=(a,b)=>{if(b>0){const p=a/b*100;if(p>maxPct)maxPct=p;}};
+  lines.forEach(l=>{
+    if(l.requote){flags.push(`${l.label}：要相談（上限超）。大滝さん承認のうえ個別見積。`);if(level==='ok')level='boss';return;}
+    const d=DISC[l.key]||{amt:0,free:0};
+    if(l.type==='oneoff')eff(d.amt,l.base*l.qty);else eff(d.amt,l.base);
+  });
+  if($('chk-talent').checked&&!$('chk-moti').checked){flags.push('タレントマネジメントはモチベーション管理と同時利用のみ。モチ管も選択してください。');if(level==='ok')level='boss';}
+  if(!$('chk-ai').checked&&!$('chk-sken').checked&&!$('chk-nen').checked&&!LK.some(k=>$('chk-'+k).checked))flags.push('プロダクトを1つ以上選択してください。');
+  if(sv&&ev&&![12,13].includes(months)){flags.push(`契約期間が${months}ヶ月（標準は12ヶ月＋自動更新）。変則期間は大滝さん承認が必要。`);if(level==='ok')level='boss';}
+
+  // ===== 出力（事務向け / LD向け）=====
+  const qexp=val('quote-exp'),aexp=val('apply-exp');
+  buildInitProductSelect();
+  const ip=val('init-product');
+  if($('init-fee'))$('init-fee').disabled=!ip;
+  const initFee=ip?num('init-fee'):0;
+  const renew=document.querySelector('input[name=renew]:checked').value;
+  const skenSel=$('chk-sken').checked;
+  if($('free-from')){$('free-from').disabled=!skenSel;$('free-cnt').disabled=!skenSel;}
+  if($('free-note-msg'))$('free-note-msg').classList.toggle('hidden',skenSel);
+  const ffrom=skenSel?val('free-from'):'',fcnt=skenSel?val('free-cnt'):'';
+  const freeNote=(ffrom||fcnt)?`適性検査 ${ffrom||'（開始月未入力）'}から${fcnt||'（件数未入力）'}件無料`:'';
+  const aiSel=$('chk-ai').checked;
+  const mainK=['moti','es','hr','roumu'].filter(k=>L[k]);
+  const grouped=((aiSel?1:0)+mainK.length+($('chk-sken').checked?1:0))>=2;
+  if(renew==='なし'){flags.push('自動更新なし：大滝さん承認が必要です。');if(level==='ok')level='boss';}
+
+  function buildItems(detail){
+    const O=[];const push=(lv,t)=>O.push('  '.repeat(lv)+t);
+    const suf=pp=>pp.length?`（${pp.join(' ／ ')}）`:'';
+    function emitItem(lv,l){
+      const d=DISC[l.key]||{amt:0,free:0};
+      if(l.requote){push(lv,`${l.label}：要相談`);return;}
+      if(l.type==='oneoff'){
+        const gross=l.base*l.qty,amt=d.amt,net=Math.max(0,gross-amt);const qt=l.qty>1?`（×${l.qty}）`:'';
+        const pp=[];if(amt>0){pp.push(`定価 ${yen(gross)}`);pp.push(`割引 -${yen(amt)}`);}
+        push(lv,`${l.label}${qt}：${yen(amt>0?net:gross)}${suf(pp)}`);return;
+      }
+      const N=months>0?months:12;const amt=d.amt;const netM=Math.max(0,l.base-amt);
+      const free=l.nf?0:d.free;const charged=Math.max(0,N-free);const total=netM*charged;
+      if((amt>0||free>0)){
+        const pp=[`定価 ${yen(l.base)}/月`];if(amt>0)pp.push(`割引 -${yen(amt)}/月`);if(free>0)pp.push(`無料 ${free}か月`);
+        push(lv,`${l.label}：${pp.join('　')}　×${charged}か月＝${yen(total)}`);
+      } else {
+        push(lv,`${l.label}：${yen(netM)}/月　×${charged}か月＝${yen(total)}`);
+      }
+    }
+    function emitJuryo(lv,l,nm){
+      const d=DISC[l.key]||{amt:0,free:0};const net=Math.max(0,l.base-d.amt);
+      const pp=[];if(d.amt>0){pp.push(`定価 ${yen(l.base)}/件`);pp.push(`割引 -${yen(d.amt)}/件`);}
+      push(lv,`${nm} ${l.qty}件：${yen(net)}/件${suf(pp)}`);
+    }
+    function emitTicket(lv,l){
+      const d=DISC[l.key]||{amt:0,free:0};
+      if(l.requote){push(lv,`${l.label}：要相談`);return;}
+      const N=months>0?months:12;const grossY=l.base*12;const netY=Math.max(0,grossY-d.amt*N);
+      if(d.amt>0){push(lv,`${l.label}：定価 ${yen(grossY)}/年　割引 -${yen(d.amt)}/月×${N}か月${detail?` ＝ ${yen(netY)}`:''}`);}
+      else{push(lv,`${l.label}：${yen(netY)}/年`);}
+    }
+    function emitNen(lv,l){const q=l.qty;push(lv,`${l.label}：${yen(l.base*q)}/年（${yen(l.base)} × ${q}名）`);}
+    function renderAICharge(bl){
+      const plan=val('ai-plan');
+      if(plan==='flat'){
+        push(bl,'課金方法：使い放題');['ai-flat-se','ai-flat-pt'].forEach(k=>{if(L[k])emitItem(bl+1,L[k]);});
+      } else {
+        push(bl,'課金方法：チケット制（年間契約・月額×12）');if(L['ai-fixed'])emitItem(bl+1,L['ai-fixed']);['tk-se','tk-pt'].forEach(k=>{if(L[k])emitTicket(bl+1,L[k]);});
+      }
+    }
+    if(ip)push(1,`初期費用（${ip}）：${yen(initFee)}`);
+    if(aiSel){push(1,'AI面接');renderAICharge(2);if(L['shorui'])emitTicket(2,L['shorui']);if(L['ai-custom'])emitItem(2,L['ai-custom']);}
+    mainK.forEach(k=>emitItem(1,L[k]));
+    if(L['sken'])emitJuryo(1,L['sken'],'適性検査 受検料');
+    if(L['nen'])emitNen(1,L['nen']);
+    const optK=['remote1on1','talent'].filter(k=>L[k]);
+    if(optK.length){push(1,'オプション利用料金');optK.forEach(k=>emitItem(2,L[k]));}
+    let periodTotal=0;
+    lines.forEach(l=>{if(l.requote)return;const d=DISC[l.key]||{amt:0,free:0};
+      if(l.type==='oneoff')periodTotal+=Math.max(0,l.base*l.qty-d.amt);
+      else if(l.type==='juryo'){const u=Math.max(0,l.base-d.amt);if(months>0)periodTotal+=u*Math.max(0,l.qty*months-d.free);}
+      else{const net=Math.max(0,l.base-d.amt);if(months>0)periodTotal+=net*Math.max(0,months-d.free);}
+    });
+    periodTotal+=initFee;
+    push(1,'──────────────');
+    if(months>0)push(1,`契約期間 合計（${months}ヶ月）：${yen(periodTotal)}`);
+    else push(1,'契約期間 合計：契約期間（開始日・終了日）を入力してください');
+    return O.map(l=>l.replace(/^  /,'')).join('\n');
+  }
+
+  const renewLine=`自動更新：${renew}`;
+  const freeLine=freeNote?`無料分受検数：${freeNote}`:'';
+  const jimuHead=[renewLine];if(freeLine)jimuHead.push(freeLine);
+  $('out-jimu').textContent=jimuHead.join('\n')+'\n'+buildItems(false);
+  const ldHead=[termLine];if(qexp)ldHead.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)ldHead.push(`申込期限：${jpDate(aexp)}`);ldHead.push(renewLine);if(freeLine)ldHead.push(freeLine);
+  $('out-ld').textContent=ldHead.join('\n')+'\n'+buildItems(true);
+  {const hp=[termLine];if(qexp)hp.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)hp.push(`申込期限：${jpDate(aexp)}`);hp.push(renewLine);$('term-head').textContent=hp.join('　／　');}
+
+  // ガバナンス
+  const md=Math.round(maxPct);
+  let govText,gc;
+  if(md===0){govText='値引き 0%（標準価格）';gc='#475569';}
+  else if(md<=20){govText=`🟢 値引き 最大 約${md}% → 現場の判断でOK`;gc='#047857';}
+  else if(md<=50){govText=`🟠 値引き 最大 約${md}% → 大滝さん承認が必要`;gc='#b45309';if(level==='ok')level='boss';}
+  else{govText=`🔴 値引き 最大 約${md}% → 個別相談`;gc='#b91c1c';level='special';}
+
+  const v=$('verdict');
+  v.className='verdict '+(level==='ok'?'v-ok':level==='boss'?'v-boss':'v-special');
+  const head=level==='ok'?'✅ そのまま進められます':level==='boss'?'⚠️ 大滝さん（事業部長）承認が必要です':'🔴 個別相談 案件です';
+  v.innerHTML=head+`<div class="gl" style="color:${gc}">${govText}</div>`+(flags.length?('<ul>'+flags.map(f=>`<li>${f}</li>`).join('')+'</ul>'):'');
+}
+
+function confettiBurst(x,y){
+  const c=document.createElement('canvas');
+  c.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';
+  c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
+  const ctx=c.getContext('2d');
+  const cols=['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+  const emo=['🎉','✨','🎊','⭐️','💰'];
+  const P=[];
+  for(let i=0;i<90;i++){const a=Math.random()*Math.PI*2,sp=4+Math.random()*8;P.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-5,g:0.22,r:5+Math.random()*6,col:cols[i%cols.length],rot:Math.random()*6.28,vr:(Math.random()-.5)*.5,life:70+Math.random()*30,em:Math.random()<0.18?emo[Math.floor(Math.random()*emo.length)]:null});}
+  (function loop(){
+    ctx.clearRect(0,0,c.width,c.height);let alive=false;
+    P.forEach(p=>{if(p.life<=0)return;alive=true;p.life--;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=Math.max(0,Math.min(1,p.life/40));
+      if(p.em){ctx.font=(p.r*3)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.em,0,0);}
+      else{ctx.fillStyle=p.col;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.62);}
+      ctx.restore();});
+    if(alive)requestAnimationFrame(loop);else c.remove();
+  })();
+}
+function copyText(id){
+  const t=$(id).textContent;const lbl=id==='out-jimu'?'事務向けをコピー':'LD向けをコピー';const b=event.target;
+  navigator.clipboard.writeText(t).then(()=>{
+    b.textContent='コピーしました 🎉';
+    const r=b.getBoundingClientRect();confettiBurst(r.left+r.width/2,r.top+r.height/2);
+    b.animate([{transform:'scale(1)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:280});
+    setTimeout(()=>{b.textContent=lbl;},1600);
+  });
+}
+
+buildLadders();
+fillTierSelect('ai-flat-se',AI_SE_TIERS);
+fillTierSelect('ai-flat-pt',AI_PT_TIERS);
+buildTickets();
+document.addEventListener('input',render);
+document.addEventListener('change',render);
+render();
+</script>
+</body>
+</html>
