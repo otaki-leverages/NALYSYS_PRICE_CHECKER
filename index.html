@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v7</title>
+<title>NALYSYS シン・チェッカー v9</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v7</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v9</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -194,7 +194,7 @@
     <button class="btn" onclick="copyText('out-ld')">LD向けをコピー</button>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v7 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v9 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -413,7 +413,7 @@ function render(){
       const d=DISC[l.key]||{amt:0,free:0};
       if(l.requote){push(lv,`${l.label}：要相談`);return;}
       const N=months>0?months:12;const grossY=l.base*12;const netY=Math.max(0,grossY-d.amt*N);
-      if(d.amt>0){push(lv,`${l.label}：定価 ${yen(grossY)}/年　割引 -${yen(d.amt)}/月×${N}か月`);}
+      if(d.amt>0){push(lv,`${l.label}：定価 ${yen(grossY)}/年　割引 -${yen(d.amt)}/月×${N}か月${detail?` ＝ ${yen(netY)}`:''}`);}
       else{push(lv,`${l.label}：${yen(netY)}/年`);}
     }
     function emitNen(lv,l){const q=l.qty;push(lv,`${l.label}：${yen(l.base*q)}/年（${yen(l.base)} × ${q}名）`);}
@@ -467,7 +467,34 @@ function render(){
   v.innerHTML=head+`<div class="gl" style="color:${gc}">${govText}</div>`+(flags.length?('<ul>'+flags.map(f=>`<li>${f}</li>`).join('')+'</ul>'):'');
 }
 
-function copyText(id){const t=$(id).textContent;const lbl=id==='out-jimu'?'事務向けをコピー':'LD向けをコピー';navigator.clipboard.writeText(t).then(()=>{const b=event.target;b.textContent='コピーしました ✓';setTimeout(()=>{b.textContent=lbl;},1500);});}
+function confettiBurst(x,y){
+  const c=document.createElement('canvas');
+  c.style.cssText='position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:9999';
+  c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
+  const ctx=c.getContext('2d');
+  const cols=['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'];
+  const emo=['🎉','✨','🎊','⭐️','💰'];
+  const P=[];
+  for(let i=0;i<90;i++){const a=Math.random()*Math.PI*2,sp=4+Math.random()*8;P.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-5,g:0.22,r:5+Math.random()*6,col:cols[i%cols.length],rot:Math.random()*6.28,vr:(Math.random()-.5)*.5,life:70+Math.random()*30,em:Math.random()<0.18?emo[Math.floor(Math.random()*emo.length)]:null});}
+  (function loop(){
+    ctx.clearRect(0,0,c.width,c.height);let alive=false;
+    P.forEach(p=>{if(p.life<=0)return;alive=true;p.life--;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=Math.max(0,Math.min(1,p.life/40));
+      if(p.em){ctx.font=(p.r*3)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.em,0,0);}
+      else{ctx.fillStyle=p.col;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.62);}
+      ctx.restore();});
+    if(alive)requestAnimationFrame(loop);else c.remove();
+  })();
+}
+function copyText(id){
+  const t=$(id).textContent;const lbl=id==='out-jimu'?'事務向けをコピー':'LD向けをコピー';const b=event.target;
+  navigator.clipboard.writeText(t).then(()=>{
+    b.textContent='コピーしました 🎉';
+    const r=b.getBoundingClientRect();confettiBurst(r.left+r.width/2,r.top+r.height/2);
+    b.animate([{transform:'scale(1)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:280});
+    setTimeout(()=>{b.textContent=lbl;},1600);
+  });
+}
 
 buildLadders();
 fillTierSelect('ai-flat-se',AI_SE_TIERS);
