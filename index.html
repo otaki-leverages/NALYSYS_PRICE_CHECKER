@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v19</title>
+<title>NALYSYS シン・チェッカー v23</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v19</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v23</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -200,6 +200,26 @@
       </div>
       <div id="free-note-msg" class="mini hidden">※「適性検査」を選択すると、無料分受検数（対象月・件数）を入力できます。</div>
     </div>
+    <div class="row" style="border-top:1px dashed #cbd5e1;padding-top:12px">
+      <label class="l">同じ取引での過去依頼</label>
+      <div class="seg" id="prev-seg">
+        <label><input type="radio" name="prevreq" value="なし" checked><span>初回（過去依頼なし）</span></label>
+        <label><input type="radio" name="prevreq" value="あり"><span>過去に依頼あり</span></label>
+      </div>
+      <div id="prev-wrap" class="subbox hidden">
+        <div class="two">
+          <div><label class="l" style="font-size:12px">過去依頼の種別</label>
+            <select id="prev-kind"><option value="見積書">見積書</option><option value="申込書">申込書</option><option value="見積書・申込書">見積書・申込書 両方</option></select>
+          </div>
+          <div id="prev-url-one"><label class="l" style="font-size:12px">Slack依頼のURL</label><input type="text" id="prev-url" placeholder="https://lvgs.slack.com/archives/..."></div>
+        </div>
+        <div class="two hidden" id="prev-url-both" style="margin-top:8px">
+          <div><label class="l" style="font-size:12px">見積書 依頼のURL</label><input type="text" id="prev-url-q" placeholder="https://lvgs.slack.com/archives/..."></div>
+          <div><label class="l" style="font-size:12px">申込書 依頼のURL</label><input type="text" id="prev-url-a" placeholder="https://lvgs.slack.com/archives/..."></div>
+        </div>
+        <div class="mini">同じ取引で過去に見積・申込を依頼している場合、そのSlackスレッドのURLを貼ってください（生成結果に記載されます）。</div>
+      </div>
+    </div>
   </div>
 
   <!-- 7. 生成結果 -->
@@ -214,7 +234,7 @@
     <button class="btn" onclick="copyText('out-ld')">LD向けをコピー</button>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v19 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v23 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -424,6 +444,25 @@ function render(){
   if($('free-note-msg'))$('free-note-msg').classList.toggle('hidden',skenSel);
   const ffrom=skenSel?val('free-from'):'',fcnt=skenSel?val('free-cnt'):'';
   const freeNote=(ffrom||fcnt)?`適性検査 ${ffrom||'（開始月未入力）'}から${fcnt||'（件数未入力）'}件無料`:'';
+  const prevReq=document.querySelector('input[name=prevreq]:checked').value;
+  const prevOn=prevReq==='あり';
+  if($('prev-wrap'))$('prev-wrap').classList.toggle('hidden',!prevOn);
+  const prevKind=prevOn?val('prev-kind'):'';
+  const bothKind=prevKind==='見積書・申込書';
+  if($('prev-url-one'))$('prev-url-one').classList.toggle('hidden',prevOn&&bothKind);
+  if($('prev-url-both'))$('prev-url-both').classList.toggle('hidden',!(prevOn&&bothKind));
+  let prevLine='同一取引の過去依頼：なし（初回）',prevMissing=false;
+  if(prevOn){
+    if(bothKind){
+      const uq=val('prev-url-q').trim(),ua=val('prev-url-a').trim();
+      prevMissing=!uq||!ua;
+      prevLine=`同一取引の過去依頼：あり（見積書・申込書）\n  見積書：${uq||'※URL未入力'}\n  申込書：${ua||'※URL未入力'}`;
+    } else {
+      const u=val('prev-url').trim();prevMissing=!u;
+      prevLine=`同一取引の過去依頼：あり（${prevKind}）${u?` ${u}`:'　※URL未入力'}`;
+    }
+  }
+  if(prevOn&&prevMissing)flags.push('過去依頼ありですが、SlackのURLが未入力です。');
   const aiSel=$('chk-ai').checked;
   const mainK=['moti','es','hr','roumu'].filter(k=>L[k]);
   const grouped=((aiSel?1:0)+mainK.length+($('chk-sken').checked?1:0))>=2;
@@ -452,7 +491,7 @@ function render(){
     function emitJuryo(lv,l,nm){
       const d=DISC[l.key]||{amt:0,free:0};const net=Math.max(0,l.base-d.amt);
       const pp=[];if(d.amt>0){pp.push(`定価 ${yen(l.base)}/件`);pp.push(`割引 -${yen(d.amt)}/件`);}
-      push(lv,`${nm} ${l.qty}件：${yen(net)}/件${suf(pp)}`);
+      push(lv,`${nm} ${l.qty}件/月：${yen(net)}/件${suf(pp)}`);
     }
     function emitTicket(lv,l){
       const d=DISC[l.key]||{amt:0,free:0};
@@ -504,11 +543,11 @@ function render(){
     return O.map(l=>l.replace(/^  /,'')).join('\n');
   }
 
-  const renewLine=`自動更新：${renew}`;
+  const renewLine=renew==='なし'?'自動更新：なし（事業部長承認済み）':`自動更新：${renew}`;
   const freeLine=freeNote?`無料分受検数：${freeNote}`:'';
-  const jimuHead=[renewLine];if(freeLine)jimuHead.push(freeLine);
+  const jimuHead=[renewLine];if(freeLine)jimuHead.push(freeLine);jimuHead.push(prevLine);
   $('out-jimu').textContent=jimuHead.join('\n')+'\n'+buildItems(false);
-  const ldHead=[termLine];if(qexp)ldHead.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)ldHead.push(`申込期限：${jpDate(aexp)}`);ldHead.push(renewLine);if(freeLine)ldHead.push(freeLine);
+  const ldHead=[termLine];if(qexp)ldHead.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)ldHead.push(`申込期限：${jpDate(aexp)}`);if(freeLine)ldHead.push(freeLine);
   $('out-ld').textContent=ldHead.join('\n')+'\n'+buildItems(true);
   {const hp=[termLine];if(qexp)hp.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)hp.push(`申込期限：${jpDate(aexp)}`);hp.push(renewLine);$('term-head').textContent=hp.join('　／　');}
 
