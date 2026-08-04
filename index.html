@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v23</title>
+<title>NALYSYS シン・チェッカー v28</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v23</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v28</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -131,7 +131,7 @@
               <div><label class="l">チケット 正社員</label><select id="poc-se"></select></div>
               <div><label class="l">チケット 非正規（パート）</label><select id="poc-pt"></select></div>
             </div>
-            <div class="mini">PoC（お試し・短期）。選んだ期間分の定額（一括）。生成結果は期間合計で表示します。</div>
+            <div class="mini">PoC（お試し・短期）。チケットは年間契約と同額（月額×12）で計算します。基本料金（固定）はPoC期間分のみ計上します。</div>
           </div>
         </div>
         <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
@@ -234,15 +234,15 @@
     <button class="btn" onclick="copyText('out-ld')">LD向けをコピー</button>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v23 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v28 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
 const AI_MONTHLY={fixed:30000,se:3000,pt:1500};
 const AI_SE_TIERS=[{name:"ライト",cap:20,price:80000},{name:"スタンダード",cap:50,price:175000},{name:"プロ",cap:100,price:300000},{name:"プレミアム",cap:300,price:750000},{name:"エンタープライズ",cap:null,price:null}];
 const AI_PT_TIERS=[{name:"ライト",cap:20,price:40000},{name:"スタンダード",cap:50,price:87500},{name:"プロ",cap:100,price:150000},{name:"アドバンス",cap:300,price:420000},{name:"プレミアム",cap:500,price:625000},{name:"エンタープライズ",cap:null,price:null}];
-const AI_TICKET_SE=[{c:100,m:25000},{c:200,m:48500},{c:300,m:70000},{c:400,m:90000},{c:500,m:108500},{c:600,m:125000},{c:700,m:140000},{c:800,m:153500},{c:900,m:165000},{c:1000,m:175000},{c:1500,m:250000},{c:2000,m:316500},{c:2500,m:375000},{c:3000,m:425000},{c:4000,m:533500},{c:5000,m:625000}];
-const AI_TICKET_SE_OVER="5,000件超";
+const AI_TICKET_SE=[{c:100,m:25000},{c:200,m:48500},{c:300,m:70000},{c:400,m:90000},{c:500,m:108500},{c:600,m:125000},{c:700,m:140000},{c:800,m:153500},{c:900,m:165000},{c:1000,m:175000},{c:1500,m:250000},{c:2000,m:316500},{c:2500,m:375000},{c:3000,m:425000},{c:4000,m:533500},{c:5000,m:625000},{c:6000,m:700000},{c:7000,m:758500},{c:8000,m:800000},{c:9000,m:825000},{c:10000,m:833500}];
+const AI_TICKET_SE_OVER="10,000件超";
 const AI_TICKET_PT=[{c:100,m:12500},{c:200,m:24000},{c:300,m:35000},{c:500,m:54000},{c:750,m:75000},{c:1000,m:91500},{c:1500,m:125000},{c:2000,m:150000},{c:3000,m:200000},{c:5000,m:291500},{c:7500,m:375000},{c:10000,m:416500}];
 const AI_TICKET_PT_OVER="10,000件超";
 const POC={se:{2:[{c:100,p:150000},{c:200,p:291000},{c:300,p:420000},{c:400,p:540000},{c:500,p:651000},{c:600,p:750000},{c:700,p:840000},{c:800,p:921000},{c:900,p:990000},{c:1000,p:1050000},{c:1500,p:1500000},{c:2000,p:1899000},{c:2500,p:2250000},{c:3000,p:2550000},{c:4000,p:3201000},{c:5000,p:3750000},{c:null,p:null}],3:[{c:100,p:100000},{c:200,p:194000},{c:300,p:280000},{c:400,p:360000},{c:500,p:434000},{c:600,p:500000},{c:700,p:560000},{c:800,p:614000},{c:900,p:660000},{c:1000,p:700000},{c:1500,p:1000000},{c:2000,p:1266000},{c:2500,p:1500000},{c:3000,p:1700000},{c:4000,p:2134000},{c:5000,p:2500000},{c:null,p:null}],4:[{c:100,p:75000},{c:200,p:145500},{c:300,p:210000},{c:400,p:270000},{c:500,p:325500},{c:600,p:375000},{c:700,p:420000},{c:800,p:460500},{c:900,p:495000},{c:1000,p:525000},{c:1500,p:750000},{c:2000,p:949500},{c:2500,p:1125000},{c:3000,p:1275000},{c:4000,p:1600500},{c:5000,p:1875000},{c:null,p:null}],6:[{c:100,p:50000},{c:200,p:97000},{c:300,p:140000},{c:400,p:180000},{c:500,p:217000},{c:600,p:250000},{c:700,p:280000},{c:800,p:307000},{c:900,p:330000},{c:1000,p:350000},{c:1500,p:500000},{c:2000,p:633000},{c:2500,p:750000},{c:3000,p:850000},{c:4000,p:1067000},{c:5000,p:1250000},{c:null,p:null}]},pt:{2:[{c:100,p:75000},{c:200,p:144000},{c:300,p:210000},{c:500,p:324000},{c:750,p:450000},{c:1000,p:549000},{c:1500,p:750000},{c:2000,p:900000},{c:3000,p:1200000},{c:5000,p:1749000},{c:7500,p:2250000},{c:10000,p:2499000},{c:null,p:3000000}],3:[{c:100,p:50000},{c:200,p:96000},{c:300,p:140000},{c:500,p:216000},{c:750,p:300000},{c:1000,p:366000},{c:1500,p:500000},{c:2000,p:600000},{c:3000,p:800000},{c:5000,p:1166000},{c:7500,p:1500000},{c:10000,p:1666000},{c:null,p:2000000}],4:[{c:100,p:37500},{c:200,p:72000},{c:300,p:105000},{c:500,p:162000},{c:750,p:225000},{c:1000,p:274500},{c:1500,p:375000},{c:2000,p:450000},{c:3000,p:600000},{c:5000,p:874500},{c:7500,p:1125000},{c:10000,p:1249500},{c:null,p:1500000}],6:[{c:100,p:25000},{c:200,p:48000},{c:300,p:70000},{c:500,p:108000},{c:750,p:150000},{c:1000,p:183000},{c:1500,p:250000},{c:2000,p:300000},{c:3000,p:400000},{c:5000,p:583000},{c:7500,p:750000},{c:10000,p:833000},{c:null,p:900000}]}};
@@ -263,7 +263,7 @@ const yen=n=>"¥"+Math.round(n).toLocaleString();
 const val=id=>$(id)?$(id).value:'';
 const num=id=>$(id)?(parseInt($(id).value,10)||0):0;
 function selTier(q,tiers){if(q<=0)return null;for(const t of tiers){if(t.cap!==null&&q<=t.cap)return t;}return tiers[tiers.length-1];}
-function monthsBetween(s,e){const a=new Date(s);const b=new Date(e);b.setDate(b.getDate()+1);let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()<a.getDate())m-=1;return m;}
+function monthsBetween(s,e){const a=new Date(s),b=new Date(e);let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()>=a.getDate())m+=1;return Math.max(1,m);}
 function jpDate(s){const d=new Date(s);return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;}
 function jpRange(sv,ev,m){const a=new Date(sv),b=new Date(ev);const e=(a.getFullYear()===b.getFullYear())?`${b.getMonth()+1}月${b.getDate()}日`:jpDate(ev);return `${jpDate(sv)} - ${e}（${m}ヶ月）`;}
 
@@ -302,13 +302,11 @@ function fillTicketSelect(id,arr,over){
     .concat(arr.map((t,i)=>`<option value="${i}">${t.c.toLocaleString()}件：${yen(t.m*12)}/年</option>`))
     .concat([`<option value="over">${over}（個別見積）</option>`]).join('');
 }
-function fillPocSelect(id,arr){
+function fillPocSelect(id,arr,over){
   const sel=$(id);if(!sel)return;const cur=sel.value;
-  sel.innerHTML=['<option value="-1">なし</option>'].concat(arr.map((t,i)=>{
-    const lab=t.c!==null?`${t.c.toLocaleString()}件`:'上限超';
-    const price=t.p===null?'個別見積':`${yen(t.p)}（期間定額）`;
-    return `<option value="${i}">${lab}：${price}</option>`;
-  })).join('');
+  sel.innerHTML=['<option value="-1">なし</option>']
+    .concat(arr.map((t,i)=>`<option value="${i}">${t.c.toLocaleString()}件：${yen(t.m*12)}/年（12ヶ月分）</option>`))
+    .concat([`<option value="over">${over}（個別見積）</option>`]).join('');
   if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;
 }
 function buildTickets(){
@@ -353,18 +351,20 @@ function collectLines(){
         const tf=num('tk-fixed');
         if(tf>0)lines.push({key:'ai-fixed',label:'基本料金（固定）',base:tf,type:'monthly',qty:1,nf:true,annual:true});
         const sv2=val('tk-se'),pv2=val('tk-pt');
-        if(sv2==='over')lines.push({key:'tk-se',label:'チケット 正社員（5,000件超）',requote:true});
+        if(sv2==='over')lines.push({key:'tk-se',label:'チケット 正社員（10,000件超）',requote:true});
         else if(parseInt(sv2,10)>=0){const t=AI_TICKET_SE[+sv2];lines.push({key:'tk-se',label:`チケット 正社員（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}
         if(pv2==='over')lines.push({key:'tk-pt',label:'チケット 非正規（10,000件超）',requote:true});
         else if(parseInt(pv2,10)>=0){const t=AI_TICKET_PT[+pv2];lines.push({key:'tk-pt',label:`チケット 非正規（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}
       } else {
         const period=parseInt(val('poc-period'),10)||2;
-        fillPocSelect('poc-se',POC.se[period]);fillPocSelect('poc-pt',POC.pt[period]);
+        fillPocSelect('poc-se',AI_TICKET_SE,AI_TICKET_SE_OVER);fillPocSelect('poc-pt',AI_TICKET_PT,AI_TICKET_PT_OVER);
         const pf=num('poc-fixed');
         if(pf>0)lines.push({key:'poc-fixed',label:'基本料金（固定）',base:pf,type:'monthly',qty:1,nf:true,pm:period});
-        const si=parseInt(val('poc-se'),10),pi=parseInt(val('poc-pt'),10);
-        if(si>=0){const t=POC.se[period][si];const lab=t.c!==null?`${t.c.toLocaleString()}件`:'上限超';if(t.p===null)lines.push({key:'poc-se',label:`チケット 正社員（PoC ${period}ヶ月・${lab}）`,requote:true});else lines.push({key:'poc-se',label:`チケット 正社員（PoC ${period}ヶ月・${lab}）`,base:t.p,type:'poctkt',qty:1});}
-        if(pi>=0){const t=POC.pt[period][pi];const lab=t.c!==null?`${t.c.toLocaleString()}件`:'上限超';if(t.p===null)lines.push({key:'poc-pt',label:`チケット 非正規（PoC ${period}ヶ月・${lab}）`,requote:true});else lines.push({key:'poc-pt',label:`チケット 非正規（PoC ${period}ヶ月・${lab}）`,base:t.p,type:'poctkt',qty:1});}
+        const sp=val('poc-se'),pp2=val('poc-pt');
+        if(sp==='over')lines.push({key:'poc-se',label:`チケット 正社員（${AI_TICKET_SE_OVER}）`,requote:true});
+        else if(parseInt(sp,10)>=0){const t=AI_TICKET_SE[+sp];lines.push({key:'poc-se',label:`チケット 正社員（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,pm:12,dm:period});}
+        if(pp2==='over')lines.push({key:'poc-pt',label:`チケット 非正規（${AI_TICKET_PT_OVER}）`,requote:true});
+        else if(parseInt(pp2,10)>=0){const t=AI_TICKET_PT[+pp2];lines.push({key:'poc-pt',label:`チケット 非正規（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,pm:12,dm:period});}
       }
     }
     const acOn=$('chk-ai-custom').checked;$('ai-custom-fee').classList.toggle('hidden',!acOn);
@@ -496,7 +496,7 @@ function render(){
     function emitTicket(lv,l){
       const d=DISC[l.key]||{amt:0,free:0};
       if(l.requote){push(lv,`${l.label}：要相談`);return;}
-      const N=months>0?months:12;const grossY=l.base*12;const netY=Math.max(0,grossY-d.amt*N);
+      const N=l.dm||(months>0?months:12);const grossY=l.base*12;const netY=Math.max(0,grossY-d.amt*N);
       if(d.amt>0){push(lv,`${l.label}：定価 ${yen(grossY)}/年　割引 -${yen(d.amt)}/月×${N}か月${detail?` ＝ ${yen(netY)}`:''}`);}
       else{push(lv,`${l.label}：${yen(netY)}/年`);}
     }
@@ -518,7 +518,7 @@ function render(){
           push(bl,'課金方法：チケット制（年間契約・月額×12）');if(L['ai-fixed'])emitItem(bl+1,L['ai-fixed']);['tk-se','tk-pt'].forEach(k=>{if(L[k])emitTicket(bl+1,L[k]);});
         } else {
           const period=parseInt(val('poc-period'),10)||2;
-          push(bl,`課金方法：チケット制（PoC・${period}ヶ月）`);if(L['poc-fixed'])emitItem(bl+1,L['poc-fixed']);['poc-se','poc-pt'].forEach(k=>{if(L[k])emitPoc(bl+1,L[k]);});
+          push(bl,`課金方法：チケット制（PoC・${period}ヶ月）`);if(L['poc-fixed'])emitItem(bl+1,L['poc-fixed']);['poc-se','poc-pt'].forEach(k=>{if(L[k])emitTicket(bl+1,L[k]);});
         }
       }
     }
@@ -534,6 +534,7 @@ function render(){
       if(l.type==='oneoff')periodTotal+=Math.max(0,l.base*l.qty-d.amt);
       else if(l.type==='poctkt')periodTotal+=Math.max(0,l.base-d.amt);
       else if(l.type==='juryo'){const u=Math.max(0,l.base-d.amt);if(months>0)periodTotal+=u*Math.max(0,l.qty*months-d.free);}
+      else if(l.dm){const N=l.pm||12;periodTotal+=Math.max(0,l.base*N-d.amt*l.dm);}
       else{const net=Math.max(0,l.base-d.amt);const N=l.pm||months;if(N>0)periodTotal+=net*Math.max(0,N-d.free);}
     });
     periodTotal+=initFee;LASTTOTAL=periodTotal;
