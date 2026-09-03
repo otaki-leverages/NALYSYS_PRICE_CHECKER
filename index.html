@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v28</title>
+<title>NALYSYS シン・チェッカー v29</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v28</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v29</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -231,10 +231,9 @@
     <button class="btn" onclick="copyText('out-jimu')">事務向けをコピー</button>
     <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin:16px 0 4px">B. LD向け（契約期間・期限・割引内訳つき）</div>
     <div class="out" id="out-ld">—</div>
-    <button class="btn" onclick="copyText('out-ld')">LD向けをコピー</button>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v28 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v29 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -567,7 +566,7 @@ function render(){
 }
 
 function copyText(id){
-  const t=$(id).textContent;const lbl=id==='out-jimu'?'事務向けをコピー':'LD向けをコピー';const b=event.target;
+  const t=$(id).textContent;const lbl='事務向けをコピー';const b=event.target;
   navigator.clipboard.writeText(t).then(()=>{
     b.textContent='コピーしました';
     setTimeout(()=>{b.textContent=lbl;},1500);
