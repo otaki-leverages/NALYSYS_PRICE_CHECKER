@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v29</title>
+<title>NALYSYS シン・チェッカー v30</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v29</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v30</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -233,7 +233,7 @@
     <div class="out" id="out-ld">—</div>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v29 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v30 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -496,7 +496,7 @@ function render(){
       const d=DISC[l.key]||{amt:0,free:0};
       if(l.requote){push(lv,`${l.label}：要相談`);return;}
       const N=l.dm||(months>0?months:12);const grossY=l.base*12;const netY=Math.max(0,grossY-d.amt*N);
-      if(d.amt>0){push(lv,`${l.label}：定価 ${yen(grossY)}/年　割引 -${yen(d.amt)}/月×${N}か月${detail?` ＝ ${yen(netY)}`:''}`);}
+      if(d.amt>0){push(lv,`${l.label}：定価 ${yen(grossY)}/年　割引 -${yen(d.amt)}/月×${N}か月　合計 ${yen(netY)}`);}
       else{push(lv,`${l.label}：${yen(netY)}/年`);}
     }
     function emitNen(lv,l){const q=l.qty;push(lv,`${l.label}：${yen(l.base*q)}/年（${yen(l.base)} × ${q}名）`);}
