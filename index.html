@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v30</title>
+<title>NALYSYS シン・チェッカー v33</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v30</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v33</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -97,8 +97,27 @@
           <label class="l">プラン</label>
           <select id="ai-plan">
             <option value="ticket">① チケット制</option>
+            <option value="juryo">② 従量課金</option>
             <option value="flat">③ 使い放題（Tier選択）</option>
           </select>
+        </div>
+        <div id="ai-juryo" class="hidden">
+          <div class="row">
+            <label class="l">契約タイプ</label>
+            <div class="seg" id="jr-type">
+              <label><input type="radio" name="jrtype" value="annual" checked><span>年間契約</span></label>
+              <label><input type="radio" name="jrtype" value="poc"><span>PoC（2〜6ヶ月）</span></label>
+            </div>
+          </div>
+          <div class="row hidden" id="jr-poc-wrap"><label class="l">PoC期間</label>
+            <select id="jr-period"><option value="2">2ヶ月</option><option value="3">3ヶ月</option><option value="4">4ヶ月</option><option value="6">6ヶ月</option></select>
+          </div>
+          <div class="row"><label class="l">基本料金（固定・月額）</label><input type="number" id="jr-fixed" value="30000" step="1000" min="0"></div>
+          <div class="two">
+            <div><label class="l">月間受検数 正社員（¥3,000/件）</label><input type="number" id="jr-se" value="0" min="0"></div>
+            <div><label class="l">月間受検数 アルバイト（¥1,500/件）</label><input type="number" id="jr-pt" value="0" min="0"></div>
+          </div>
+          <div class="mini">受検数が0の場合、従量の行は出力されません。割引・無料は「5. 割引・無料」で設定できます。</div>
         </div>
         <div id="ai-flat" class="hidden">
           <div class="two">
@@ -141,6 +160,23 @@
         <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
           <label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-shorui"> オプション：書類選考チケット</label>
           <select id="shorui-sel" class="hidden" style="margin-top:6px"></select>
+        </div>
+        <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
+          <label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-casual"> オプション：AIカジュアル面談 チケット</label>
+          <select id="casual-sel" class="hidden" style="margin-top:6px"></select>
+        </div>
+        <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
+          <label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-seikaku"> オプション：性格検査チケット</label>
+          <select id="seikaku-sel" class="hidden" style="margin-top:6px"></select>
+        </div>
+        <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
+          <label style="font-size:13px;font-weight:600"><input type="checkbox" id="chk-gyaku"> オプション：AI逆質問チケット</label>
+          <select id="gyaku-sel" class="hidden" style="margin-top:6px"></select>
+        </div>
+        <div style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px">
+          <label style="font-size:13px;font-weight:600">オプション（月額固定）</label>
+          <label style="font-size:13px;display:block;margin-top:4px"><input type="checkbox" id="chk-kaisetsu"> 会社説明機能（¥25,000/月・年¥300,000）</label>
+          <label style="font-size:13px;display:block;margin-top:4px"><input type="checkbox" id="chk-enquete"> アンケート機能（¥10,000/月・年¥120,000）</label>
         </div>
         <div class="pricebox" id="ai-price" style="margin-top:8px">—</div>
       </div>
@@ -233,7 +269,7 @@
     <div class="out" id="out-ld">—</div>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v30 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v33 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -247,6 +283,11 @@ const AI_TICKET_PT_OVER="10,000件超";
 const POC={se:{2:[{c:100,p:150000},{c:200,p:291000},{c:300,p:420000},{c:400,p:540000},{c:500,p:651000},{c:600,p:750000},{c:700,p:840000},{c:800,p:921000},{c:900,p:990000},{c:1000,p:1050000},{c:1500,p:1500000},{c:2000,p:1899000},{c:2500,p:2250000},{c:3000,p:2550000},{c:4000,p:3201000},{c:5000,p:3750000},{c:null,p:null}],3:[{c:100,p:100000},{c:200,p:194000},{c:300,p:280000},{c:400,p:360000},{c:500,p:434000},{c:600,p:500000},{c:700,p:560000},{c:800,p:614000},{c:900,p:660000},{c:1000,p:700000},{c:1500,p:1000000},{c:2000,p:1266000},{c:2500,p:1500000},{c:3000,p:1700000},{c:4000,p:2134000},{c:5000,p:2500000},{c:null,p:null}],4:[{c:100,p:75000},{c:200,p:145500},{c:300,p:210000},{c:400,p:270000},{c:500,p:325500},{c:600,p:375000},{c:700,p:420000},{c:800,p:460500},{c:900,p:495000},{c:1000,p:525000},{c:1500,p:750000},{c:2000,p:949500},{c:2500,p:1125000},{c:3000,p:1275000},{c:4000,p:1600500},{c:5000,p:1875000},{c:null,p:null}],6:[{c:100,p:50000},{c:200,p:97000},{c:300,p:140000},{c:400,p:180000},{c:500,p:217000},{c:600,p:250000},{c:700,p:280000},{c:800,p:307000},{c:900,p:330000},{c:1000,p:350000},{c:1500,p:500000},{c:2000,p:633000},{c:2500,p:750000},{c:3000,p:850000},{c:4000,p:1067000},{c:5000,p:1250000},{c:null,p:null}]},pt:{2:[{c:100,p:75000},{c:200,p:144000},{c:300,p:210000},{c:500,p:324000},{c:750,p:450000},{c:1000,p:549000},{c:1500,p:750000},{c:2000,p:900000},{c:3000,p:1200000},{c:5000,p:1749000},{c:7500,p:2250000},{c:10000,p:2499000},{c:null,p:3000000}],3:[{c:100,p:50000},{c:200,p:96000},{c:300,p:140000},{c:500,p:216000},{c:750,p:300000},{c:1000,p:366000},{c:1500,p:500000},{c:2000,p:600000},{c:3000,p:800000},{c:5000,p:1166000},{c:7500,p:1500000},{c:10000,p:1666000},{c:null,p:2000000}],4:[{c:100,p:37500},{c:200,p:72000},{c:300,p:105000},{c:500,p:162000},{c:750,p:225000},{c:1000,p:274500},{c:1500,p:375000},{c:2000,p:450000},{c:3000,p:600000},{c:5000,p:874500},{c:7500,p:1125000},{c:10000,p:1249500},{c:null,p:1500000}],6:[{c:100,p:25000},{c:200,p:48000},{c:300,p:70000},{c:500,p:108000},{c:750,p:150000},{c:1000,p:183000},{c:1500,p:250000},{c:2000,p:300000},{c:3000,p:400000},{c:5000,p:583000},{c:7500,p:750000},{c:10000,p:833000},{c:null,p:900000}]}};
 const SHORUI=[{c:500,m:12500},{c:600,m:14700},{c:700,m:16800},{c:800,m:18800},{c:900,m:20700},{c:1000,m:22500},{c:1500,m:31125},{c:2000,m:38000},{c:2500,m:43750},{c:3000,m:48750},{c:4000,m:60000},{c:5000,m:70000},{c:6000,m:81000},{c:7000,m:92750},{c:8000,m:104000},{c:9000,m:114750},{c:10000,m:125000}];
 const SHORUI_OVER="10,000件超";
+const CASUAL=[{c:100,m:16500},{c:200,m:32500},{c:300,m:46500},{c:400,m:60000},{c:500,m:73000},{c:600,m:82500},{c:700,m:93500},{c:800,m:103500},{c:900,m:109000},{c:1000,m:116500},{c:1500,m:169000},{c:2000,m:208500},{c:2500,m:250000},{c:3000,m:287500},{c:4000,m:350000},{c:5000,m:416500},{c:6000,m:475000},{c:7000,m:496000},{c:8000,m:533500},{c:9000,m:562500},{c:10000,m:583500}];
+const SEIKAKU=[{c:100,m:4200},{c:200,m:8000},{c:300,m:11800},{c:400,m:15000},{c:500,m:17900},{c:600,m:21000},{c:700,m:23300},{c:800,m:25300},{c:900,m:27800},{c:1000,m:29200},{c:1500,m:41300},{c:2000,m:53300},{c:2500,m:62500},{c:3000,m:70000},{c:4000,m:90000},{c:5000,m:104200},{c:6000,m:115000},{c:7000,m:128300},{c:8000,m:133300},{c:9000,m:135000},{c:10000,m:141700}];
+const GYAKU=[{c:100,m:8500},{c:200,m:16500},{c:300,m:24000},{c:400,m:31000},{c:500,m:37500},{c:600,m:44000},{c:700,m:49500},{c:800,m:55000},{c:900,m:60000},{c:1000,m:64500},{c:1500,m:94000},{c:2000,m:121000},{c:2500,m:146000},{c:3000,m:169000},{c:4000,m:216500},{c:5000,m:260500},{c:6000,m:300000},{c:7000,m:335500},{c:8000,m:366500},{c:9000,m:394000},{c:10000,m:416500}];
+const TK_OVER="10,000件超";
+const FIXOPT={kaisetsu:{label:"会社説明機能",m:25000},enquete:{label:"アンケート機能",m:10000}};
 const LADDERS={
   moti:{label:"モチベーション管理",tiers:[{cap:30,price:80000},{cap:50,price:100000},{cap:100,price:150000},{cap:200,price:230000},{cap:300,price:300000},{cap:400,price:370000},{cap:500,price:450000},{cap:1000,price:650000},{cap:null,price:null}]},
   remote1on1:{label:"リモート1on1",note:"モチベーション管理オプション（同時利用のみ）",tiers:[{cap:30,price:11250},{cap:50,price:20000},{cap:100,price:37500},{cap:200,price:75000},{cap:300,price:125000},{cap:400,price:175000},{cap:500,price:225000},{cap:1000,price:375000},{cap:null,price:null}]},
@@ -312,6 +353,9 @@ function buildTickets(){
   fillTicketSelect('tk-se',AI_TICKET_SE,AI_TICKET_SE_OVER);
   fillTicketSelect('tk-pt',AI_TICKET_PT,AI_TICKET_PT_OVER);
   fillTicketSelect('shorui-sel',SHORUI,SHORUI_OVER);
+  fillTicketSelect('casual-sel',CASUAL,TK_OVER);
+  fillTicketSelect('seikaku-sel',SEIKAKU,TK_OVER);
+  fillTicketSelect('gyaku-sel',GYAKU,TK_OVER);
 }
 function buildInitProductSelect(){
   const opts=[{v:'',t:'（指定なし）'}];
@@ -336,7 +380,20 @@ function collectLines(){
     const plan=val('ai-plan');
     $('ai-flat').classList.toggle('hidden',plan!=='flat');
     $('ai-ticket').classList.toggle('hidden',plan!=='ticket');
-    if(plan==='flat'){
+    $('ai-juryo').classList.toggle('hidden',plan!=='juryo');
+    if(plan==='juryo'){
+      const jt=document.querySelector('input[name=jrtype]:checked').value;
+      const jpoc=jt==='poc';
+      $('jr-poc-wrap').classList.toggle('hidden',!jpoc);
+      const jper=jpoc?(parseInt(val('jr-period'),10)||2):0;
+      $('ai-price').textContent=jpoc?`従量課金（PoC・${jper}ヶ月）`:'従量課金（年間契約）';
+      const jf=num('jr-fixed');
+      if(jf>0)lines.push(jpoc?{key:'ai-fixed',label:'基本料金（固定）',base:jf,type:'monthly',qty:1,nf:true,pm:jper}
+                              :{key:'ai-fixed',label:'基本料金（固定）',base:jf,type:'monthly',qty:1,nf:true});
+      const jse=num('jr-se'),jpt=num('jr-pt');
+      if(jse>0)lines.push({key:'ai-se',label:'AI面接 受検料（正社員・従量）',base:AI_MONTHLY.se,type:'juryo',qty:jse,jm:jpoc?jper:0});
+      if(jpt>0)lines.push({key:'ai-pt',label:'AI面接 受検料（パート・従量）',base:AI_MONTHLY.pt,type:'juryo',qty:jpt,jm:jpoc?jper:0});
+    } else if(plan==='flat'){
       const si=parseInt(val('ai-flat-se'),10), pi=parseInt(val('ai-flat-pt'),10);
       $('ai-price').textContent='Tierを選択してください';
       if(si>=0){const t=AI_SE_TIERS[si];if(t.price===null)lines.push({key:'ai-flat-se',label:`使い放題 正社員（${t.name}）`,requote:true});else lines.push({key:'ai-flat-se',label:`使い放題 正社員（${t.name}・〜${t.cap}件）`,base:t.price,type:'monthly',qty:1});}
@@ -370,6 +427,17 @@ function collectLines(){
     if(acOn)lines.push({key:'ai-custom',label:'AI面接 カスタム費用',base:num('ai-custom-fee'),type:'oneoff',qty:1});
     const shOn=$('chk-shorui').checked;$('shorui-sel').classList.toggle('hidden',!shOn);
     if(shOn){const sv3=val('shorui-sel');if(sv3==='over')lines.push({key:'shorui',label:'書類選考チケット（10,000件超）',requote:true});else if(parseInt(sv3,10)>=0){const t=SHORUI[+sv3];lines.push({key:'shorui',label:`書類選考チケット（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}}
+    const optTk=[['casual','casual-sel',CASUAL,'AIカジュアル面談 チケット'],['seikaku','seikaku-sel',SEIKAKU,'性格検査チケット'],['gyaku','gyaku-sel',GYAKU,'AI逆質問チケット']];
+    optTk.forEach(([key,selId,MST,nm])=>{
+      const on=$('chk-'+key).checked;$(selId).classList.toggle('hidden',!on);
+      if(!on)return;
+      const v=val(selId);
+      if(v==='over')lines.push({key,label:`${nm}（${TK_OVER}）`,requote:true});
+      else if(parseInt(v,10)>=0){const t=MST[+v];lines.push({key,label:`${nm}（${t.c.toLocaleString()}件）`,base:t.m,type:'monthly',qty:1,nf:true,annual:true});}
+    });
+    Object.keys(FIXOPT).forEach(k=>{
+      if($('chk-'+k).checked)lines.push({key:k,label:FIXOPT[k].label,base:FIXOPT[k].m,type:'monthly',qty:1,nf:true,annual:true});
+    });
   } else { $('ai-price').textContent='—'; }
   // 適性検査（従量・区分なし・1件¥2,500）
   const skenOn=$('chk-sken').checked;$('cfg-sken').classList.toggle('hidden',!skenOn);
@@ -490,7 +558,11 @@ function render(){
     function emitJuryo(lv,l,nm){
       const d=DISC[l.key]||{amt:0,free:0};const net=Math.max(0,l.base-d.amt);
       const pp=[];if(d.amt>0){pp.push(`定価 ${yen(l.base)}/件`);pp.push(`割引 -${yen(d.amt)}/件`);}
-      push(lv,`${nm} ${l.qty}件/月：${yen(net)}/件${suf(pp)}`);
+      const N=l.jm||(months>0?months:12);
+      const cnt=Math.max(0,l.qty*N-(d.free||0));
+      const tot=net*cnt;
+      const freeTxt=d.free>0?`／無料 ${d.free}件`:'';
+      push(lv,`${nm} ${l.qty}件/月：${yen(net)}/件${suf(pp)}　合計 ${yen(tot)}（${l.qty}件×${N}か月${freeTxt}）`);
     }
     function emitTicket(lv,l){
       const d=DISC[l.key]||{amt:0,free:0};
@@ -509,7 +581,13 @@ function render(){
     }
     function renderAICharge(bl){
       const plan=val('ai-plan');
-      if(plan==='flat'){
+      if(plan==='juryo'){
+        const jt=document.querySelector('input[name=jrtype]:checked').value;
+        const jper=parseInt(val('jr-period'),10)||2;
+        push(bl,'課金方法：従量課金'+(jt==='poc'?`（PoC・${jper}ヶ月）`:'（年間契約）'));
+        if(L['ai-fixed'])emitItem(bl+1,L['ai-fixed']);
+        [['ai-se','正社員'],['ai-pt','パート']].forEach(([k,nm])=>{if(L[k])emitJuryo(bl+2,L[k],nm);});
+      } else if(plan==='flat'){
         push(bl,'課金方法：使い放題');['ai-flat-se','ai-flat-pt'].forEach(k=>{if(L[k])emitItem(bl+1,L[k]);});
       } else {
         const tktype=document.querySelector('input[name=tktype]:checked').value;
@@ -522,7 +600,7 @@ function render(){
       }
     }
     if(ip)push(1,`初期費用（${ip}）：${yen(initFee)}`);
-    if(aiSel){push(1,'AI面接');renderAICharge(2);if(L['shorui'])emitTicket(2,L['shorui']);if(L['ai-custom'])emitItem(2,L['ai-custom']);}
+    if(aiSel){push(1,'AI面接');renderAICharge(2);['shorui','casual','seikaku','gyaku'].forEach(k=>{if(L[k])emitTicket(2,L[k]);});['kaisetsu','enquete'].forEach(k=>{if(L[k])emitItem(2,L[k]);});if(L['ai-custom'])emitItem(2,L['ai-custom']);}
     mainK.forEach(k=>emitItem(1,L[k]));
     if(L['sken'])emitJuryo(1,L['sken'],'適性検査 受検料');
     if(L['nen'])emitNen(1,L['nen']);
@@ -532,7 +610,7 @@ function render(){
     lines.forEach(l=>{if(l.requote)return;const d=DISC[l.key]||{amt:0,free:0};
       if(l.type==='oneoff')periodTotal+=Math.max(0,l.base*l.qty-d.amt);
       else if(l.type==='poctkt')periodTotal+=Math.max(0,l.base-d.amt);
-      else if(l.type==='juryo'){const u=Math.max(0,l.base-d.amt);if(months>0)periodTotal+=u*Math.max(0,l.qty*months-d.free);}
+      else if(l.type==='juryo'){const u=Math.max(0,l.base-d.amt);const N=l.jm||months;if(N>0)periodTotal+=u*Math.max(0,l.qty*N-d.free);}
       else if(l.dm){const N=l.pm||12;periodTotal+=Math.max(0,l.base*N-d.amt*l.dm);}
       else{const net=Math.max(0,l.base-d.amt);const N=l.pm||months;if(N>0)periodTotal+=net*Math.max(0,N-d.free);}
     });
