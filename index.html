@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v33</title>
+<title>NALYSYS シン・チェッカー v35</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v33</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v35</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -269,7 +269,7 @@
     <div class="out" id="out-ld">—</div>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v33 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v35 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -289,7 +289,7 @@ const GYAKU=[{c:100,m:8500},{c:200,m:16500},{c:300,m:24000},{c:400,m:31000},{c:5
 const TK_OVER="10,000件超";
 const FIXOPT={kaisetsu:{label:"会社説明機能",m:25000},enquete:{label:"アンケート機能",m:10000}};
 const LADDERS={
-  moti:{label:"モチベーション管理",tiers:[{cap:30,price:80000},{cap:50,price:100000},{cap:100,price:150000},{cap:200,price:230000},{cap:300,price:300000},{cap:400,price:370000},{cap:500,price:450000},{cap:1000,price:650000},{cap:null,price:null}]},
+  moti:{label:"モチベーション管理",tiers:[{cap:30,price:80000},{cap:50,price:100000},{cap:100,price:150000},{cap:200,price:230000},{cap:300,price:300000},{cap:400,price:370000},{cap:500,price:450000},{cap:1000,price:650000},{cap:1500,price:800000},{cap:2000,price:980000},{cap:3000,price:1250000},{cap:5000,price:1700000},{cap:7500,price:2150000},{cap:10000,price:2600000},{cap:15000,price:3200000},{cap:20000,price:3900000},{cap:30000,price:5000000},{cap:50000,price:6800000},{cap:null,price:10000000}]},
   remote1on1:{label:"リモート1on1",note:"モチベーション管理オプション（同時利用のみ）",tiers:[{cap:30,price:11250},{cap:50,price:20000},{cap:100,price:37500},{cap:200,price:75000},{cap:300,price:125000},{cap:400,price:175000},{cap:500,price:225000},{cap:1000,price:375000},{cap:null,price:null}]},
   es:{label:"エンゲージメントサーベイ",note:"モチベーション管理プラン（通常料金とは別）",tiers:[{cap:100,price:30000},{cap:200,price:60000},{cap:500,price:150000},{cap:1000,price:300000},{cap:null,price:null}]},
   talent:{label:"タレントマネジメント",note:"モチベーション管理と同時利用のみ",tiers:[{cap:100,price:10000},{cap:300,price:20000},{cap:500,price:30000},{cap:1000,price:40000},{cap:null,price:null}]},
@@ -302,6 +302,7 @@ const $=id=>document.getElementById(id);
 const yen=n=>"¥"+Math.round(n).toLocaleString();
 const val=id=>$(id)?$(id).value:'';
 const num=id=>$(id)?(parseInt($(id).value,10)||0):0;
+function capLbl(k,t){if(t.cap)return '〜'+t.cap.toLocaleString()+'名';const ts=LADDERS[k].tiers;const prev=ts[ts.length-2];return (prev?(prev.cap+1).toLocaleString():'1')+'名〜';}
 function selTier(q,tiers){if(q<=0)return null;for(const t of tiers){if(t.cap!==null&&q<=t.cap)return t;}return tiers[tiers.length-1];}
 function monthsBetween(s,e){const a=new Date(s),b=new Date(e);let m=(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth());if(b.getDate()>=a.getDate())m+=1;return Math.max(1,m);}
 function jpDate(s){const d=new Date(s);return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;}
@@ -367,7 +368,7 @@ function buildInitProductSelect(){
 }
 function renderLadderTable(k,cur){
   $('tier-'+k).innerHTML=LADDERS[k].tiers.map(t=>{
-    const lab=t.cap?('〜'+t.cap+'名'):'1,001名〜';const price=t.price===null?'要相談':yen(t.price);
+    const lab=capLbl(k,t);const price=t.price===null?'要相談':yen(t.price);
     const c=(cur&&t.cap===cur.cap&&t.price===cur.price)?'cur':'';
     return `<tr class="${c}"><td>${lab}${c?' ⬅':''}</td><td>${price}</td></tr>`;
   }).join('');
@@ -446,7 +447,7 @@ function collectLines(){
   if(nenOn)lines.push({key:'nen',label:'年末調整',base:350,type:'oneoff',qty:num('nen-acct')});
   const addLadder=(k)=>{
     const users=num('users-'+k);const t=selTier(users,LADDERS[k].tiers);renderLadderTable(k,t);
-    const capLabel=t.cap?('〜'+t.cap+'名'):'1,001名〜';
+    const capLabel=capLbl(k,t);
     if(t.price===null){$('price-'+k).textContent='要相談（個別見積）';lines.push({key:k,label:`${LADDERS[k].label}（${capLabel}）`,requote:true});}
     else{$('price-'+k).textContent=`${capLabel} ／ 月額定価 ${yen(t.price)}`;lines.push({key:k,label:`${LADDERS[k].label}（${capLabel}）`,base:t.price,type:'monthly',qty:1});}
   };
