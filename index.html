@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v35</title>
+<title>NALYSYS シン・チェッカー v36</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,7 +54,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v35</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v36</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
@@ -200,6 +200,23 @@
       </div>
     </div>
 
+    <div class="prod">
+      <label><input type="checkbox" id="chk-esign"> 電子契約</label>
+      <div id="cfg-esign" class="subbox hidden">
+        <div class="row">
+          <label class="l">プラン</label>
+          <select id="esign-plan">
+            <option value="light">ライトプラン（〜100件 ¥12,000／超過 ¥200/件）</option>
+            <option value="std">スタンダードプラン（〜500件 ¥30,000／超過 ¥150/件）</option>
+          </select>
+        </div>
+        <label class="l">電子契約送付数（件/月）</label>
+        <input type="number" id="esign-qty" value="100" min="0">
+        <div class="pricebox" id="esign-price">—</div>
+        <div class="mini">継続課金・積上式従量制（定額枠＋超過分は単価加算）。利用周期・請求周期：1ヶ月。</div>
+      </div>
+    </div>
+
     <div id="ladder-products"></div>
   </div>
 
@@ -269,7 +286,7 @@
     <div class="out" id="out-ld">—</div>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v35 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v36 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -296,6 +313,7 @@ const LADDERS={
   hr:{label:"人事評価",tiers:[{cap:100,price:10000},{cap:200,price:20000},{cap:300,price:30000},{cap:400,price:40000},{cap:500,price:50000},{cap:1000,price:100000},{cap:null,price:null}]},
   roumu:{label:"労務管理（月額）",tiers:[{cap:30,price:10000},{cap:50,price:15000},{cap:100,price:30000},{cap:200,price:60000},{cap:300,price:90000},{cap:400,price:120000},{cap:500,price:150000},{cap:1000,price:300000},{cap:null,price:null}]},
 };
+const ESIGN={light:{label:"ライトプラン",inc:100,fixed:12000,unit:200},std:{label:"スタンダードプラン",inc:500,fixed:30000,unit:150}};
 const LK=["moti","talent","hr","roumu"];
 
 const $=id=>document.getElementById(id);
@@ -360,7 +378,7 @@ function buildTickets(){
 }
 function buildInitProductSelect(){
   const opts=[{v:'',t:'（指定なし）'}];
-  const reg=[['ai','AI面接'],['sken','適性検査'],['nen','年末調整'],['moti','モチベーション管理'],['hr','人事評価'],['roumu','労務管理'],['talent','タレントマネジメント'],['remote1on1','リモート1on1']];
+  const reg=[['ai','AI面接'],['sken','適性検査'],['nen','年末調整'],['esign','電子契約'],['moti','モチベーション管理'],['hr','人事評価'],['roumu','労務管理'],['talent','タレントマネジメント'],['remote1on1','リモート1on1']];
   reg.forEach(([k,nm])=>{const c=$('chk-'+k);if(c&&c.checked)opts.push({v:nm,t:nm});});
   const sel=$('init-product');const cur=sel.value;
   sel.innerHTML=opts.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
@@ -445,6 +463,13 @@ function collectLines(){
   if(skenOn)lines.push({key:'sken',label:'適性検査 受検料',base:2500,type:'juryo',qty:num('sken-qty')});
   const nenOn=$('chk-nen').checked;$('cfg-nen').classList.toggle('hidden',!nenOn);
   if(nenOn)lines.push({key:'nen',label:'年末調整',base:350,type:'oneoff',qty:num('nen-acct')});
+  // 電子契約（積上式従量制：定額枠＋超過単価）
+  const esignOn=$('chk-esign').checked;$('cfg-esign').classList.toggle('hidden',!esignOn);
+  if(esignOn){
+    const P=ESIGN[val('esign-plan')]||ESIGN.light;const q=num('esign-qty');const over=Math.max(0,q-P.inc);const m=P.fixed+over*P.unit;
+    $('esign-price').textContent=`基本 ${yen(P.fixed)}（〜${P.inc}件）`+(over>0?` ＋ 超過 ${over}件×${yen(P.unit)}＝${yen(over*P.unit)}`:'')+` ／ 月額 ${yen(m)}`;
+    lines.push({key:'esign',label:`電子契約（${P.label}・${q}件/月${over>0?`：基本${yen(P.fixed)}＋超過${over}件×${yen(P.unit)}`:''}）`,base:m,type:'monthly',qty:1});
+  }
   const addLadder=(k)=>{
     const users=num('users-'+k);const t=selTier(users,LADDERS[k].tiers);renderLadderTable(k,t);
     const capLabel=capLbl(k,t);
@@ -497,7 +522,7 @@ function render(){
     if(l.type==='oneoff')eff(d.amt,l.base*l.qty);else eff(d.amt,l.base);  // poctkt/juryo/monthly は base 基準
   });
   if($('chk-talent').checked&&!$('chk-moti').checked){flags.push('タレントマネジメントはモチベーション管理と同時利用のみ。モチ管も選択してください。');if(level==='ok')level='boss';}
-  if(!$('chk-ai').checked&&!$('chk-sken').checked&&!$('chk-nen').checked&&!LK.some(k=>$('chk-'+k).checked))flags.push('プロダクトを1つ以上選択してください。');
+  if(!$('chk-ai').checked&&!$('chk-sken').checked&&!$('chk-nen').checked&&!$('chk-esign').checked&&!LK.some(k=>$('chk-'+k).checked))flags.push('プロダクトを1つ以上選択してください。');
   if(sv&&ev&&![12,13].includes(months)){flags.push(`契約期間が${months}ヶ月（標準は12ヶ月＋自動更新）。変則期間は大滝さん承認が必要。`);if(level==='ok')level='boss';}
 
   // ===== 出力（事務向け / LD向け）=====
@@ -605,6 +630,7 @@ function render(){
     mainK.forEach(k=>emitItem(1,L[k]));
     if(L['sken'])emitJuryo(1,L['sken'],'適性検査 受検料');
     if(L['nen'])emitNen(1,L['nen']);
+    if(L['esign'])emitItem(1,L['esign']);
     const optK=['remote1on1','talent'].filter(k=>L[k]);
     if(optK.length){push(1,'オプション利用料金');optK.forEach(k=>emitItem(2,L[k]));}
     let periodTotal=0;
