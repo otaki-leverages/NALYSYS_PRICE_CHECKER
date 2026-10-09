@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NALYSYS シン・チェッカー v36</title>
+<title>NALYSYS シン・チェッカー v37</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic","Hiragino Sans",sans-serif;background:#eef2f7;color:#1f2937;padding:18px;line-height:1.6}
@@ -54,11 +54,44 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>NALYSYS シン・チェッカー<span class="ver">v36</span></h1>
+    <h1>NALYSYS シン・チェッカー<span class="ver">v37</span></h1>
     <p>契約期間・プロダクトを選び、各プランごとに割引（金額）・無料を設定。承認要否を判定し、見積もり依頼を階層フォーマットで生成します。</p>
   </header>
 
   <div id="verdict" class="verdict v-ok">入力すると判定が表示されます。</div>
+
+  <!-- 契約種別の判定 -->
+  <div class="card">
+    <h2>契約種別の判定</h2>
+    <label class="l">Step 1　商談のフェーズ</label>
+    <div class="seg" id="ct-phase">
+      <label><input type="radio" name="ct-phase" value="poc"><span>PoC（検証段階）</span></label>
+      <label><input type="radio" name="ct-phase" value="main"><span>本受注（本契約）</span></label>
+    </div>
+    <div id="ct-q-agency" class="hidden" style="margin-top:10px">
+      <label class="l">代理店経由ですか？</label>
+      <div class="seg">
+        <label><input type="radio" name="ct-agency" value="yes"><span>はい（代理店経由）</span></label>
+        <label><input type="radio" name="ct-agency" value="no"><span>いいえ（自社直接）</span></label>
+      </div>
+    </div>
+    <div id="ct-q-prevpoc" class="hidden" style="margin-top:10px">
+      <label class="l">過去に同顧客で「代理店PoC」を実施済みですか？</label>
+      <div class="seg">
+        <label><input type="radio" name="ct-prevpoc" value="yes"><span>はい（事前PoCあり）</span></label>
+        <label><input type="radio" name="ct-prevpoc" value="no"><span>いいえ（事前PoCなし）</span></label>
+      </div>
+    </div>
+    <div id="ct-q-dept" class="hidden" style="margin-top:10px">
+      <label class="l">今回の本受注は「PoCと同じ部門」ですか？</label>
+      <div class="seg">
+        <label><input type="radio" name="ct-dept" value="yes"><span>はい（PoCと同部門）</span></label>
+        <label><input type="radio" name="ct-dept" value="no"><span>いいえ（別部門を追加）</span></label>
+      </div>
+    </div>
+    <div class="pricebox" id="ct-result" style="margin-top:12px">—</div>
+    <div class="mini" id="ct-path"></div>
+  </div>
 
   <!-- 1. 契約期間 -->
   <div class="card">
@@ -253,26 +286,6 @@
       </div>
       <div id="free-note-msg" class="mini hidden">※「適性検査」を選択すると、無料分受検数（対象月・件数）を入力できます。</div>
     </div>
-    <div class="row" style="border-top:1px dashed #cbd5e1;padding-top:12px">
-      <label class="l">同じ取引での過去依頼</label>
-      <div class="seg" id="prev-seg">
-        <label><input type="radio" name="prevreq" value="なし" checked><span>初回（過去依頼なし）</span></label>
-        <label><input type="radio" name="prevreq" value="あり"><span>過去に依頼あり</span></label>
-      </div>
-      <div id="prev-wrap" class="subbox hidden">
-        <div class="two">
-          <div><label class="l" style="font-size:12px">過去依頼の種別</label>
-            <select id="prev-kind"><option value="見積書">見積書</option><option value="申込書">申込書</option><option value="見積書・申込書">見積書・申込書 両方</option></select>
-          </div>
-          <div id="prev-url-one"><label class="l" style="font-size:12px">Slack依頼のURL</label><input type="text" id="prev-url" placeholder="https://lvgs.slack.com/archives/..."></div>
-        </div>
-        <div class="two hidden" id="prev-url-both" style="margin-top:8px">
-          <div><label class="l" style="font-size:12px">見積書 依頼のURL</label><input type="text" id="prev-url-q" placeholder="https://lvgs.slack.com/archives/..."></div>
-          <div><label class="l" style="font-size:12px">申込書 依頼のURL</label><input type="text" id="prev-url-a" placeholder="https://lvgs.slack.com/archives/..."></div>
-        </div>
-        <div class="mini">同じ取引で過去に見積・申込を依頼している場合、そのSlackスレッドのURLを貼ってください（生成結果に記載されます）。</div>
-      </div>
-    </div>
   </div>
 
   <!-- 7. 生成結果 -->
@@ -286,7 +299,7 @@
     <div class="out" id="out-ld">—</div>
   </div>
 
-  <div class="foot">NALYSYS シン・チェッカー v36 ／ プラン判定ツール（社内用）</div>
+  <div class="foot">NALYSYS シン・チェッカー v37 ／ プラン判定ツール（社内用）</div>
 </div>
 
 <script>
@@ -499,6 +512,26 @@ function buildDiscUI(lines){
   }).join('');
 }
 
+// 契約種別の判定（直販PoC／代理店PoC／直販／代理店）
+function judgeContractType(){
+  const rv=n=>{const e=document.querySelector(`input[name=${n}]:checked`);return e?e.value:'';};
+  const phase=rv('ct-phase'),ag=rv('ct-agency'),pp=rv('ct-prevpoc'),dp=rv('ct-dept');
+  $('ct-q-agency').classList.toggle('hidden',!phase);
+  const showPrev=phase==='main'&&ag==='yes';
+  $('ct-q-prevpoc').classList.toggle('hidden',!showPrev);
+  $('ct-q-dept').classList.toggle('hidden',!(showPrev&&pp==='yes'));
+  let type='',why='';
+  if(phase==='poc'&&ag==='yes'){type='代理店PoC';why='PoC × 代理店経由';}
+  else if(phase==='poc'&&ag==='no'){type='直販PoC';why='PoC × 自社直接';}
+  else if(phase==='main'&&ag==='no'){type='直販';why='本受注 × 自社直接';}
+  else if(showPrev&&pp==='no'){type='代理店';why='本受注 × 代理店経由 × 事前の代理店PoCなし（通常の本受注）';}
+  else if(showPrev&&pp==='yes'&&dp==='yes'){type='代理店';why='本受注 × 代理店経由 × 事前の代理店PoCあり × PoCと同部門';}
+  else if(showPrev&&pp==='yes'&&dp==='no'){type='直販';why='本受注 × 代理店経由 × 事前の代理店PoCあり × 別部門の追加（部門A後に部門B）';}
+  $('ct-result').innerHTML=type?`契約種別：<b style="font-size:18px">【${type}】</b>`:'上の質問に答えると契約種別が判定されます。';
+  $('ct-path').textContent=type?('判定根拠：'+why):'';
+  return type;
+}
+
 function render(){
 
   // 契約期間
@@ -537,25 +570,9 @@ function render(){
   if($('free-note-msg'))$('free-note-msg').classList.toggle('hidden',skenSel);
   const ffrom=skenSel?val('free-from'):'',fcnt=skenSel?val('free-cnt'):'';
   const freeNote=(ffrom||fcnt)?`適性検査 ${ffrom||'（開始月未入力）'}から${fcnt||'（件数未入力）'}件無料`:'';
-  const prevReq=document.querySelector('input[name=prevreq]:checked').value;
-  const prevOn=prevReq==='あり';
-  if($('prev-wrap'))$('prev-wrap').classList.toggle('hidden',!prevOn);
-  const prevKind=prevOn?val('prev-kind'):'';
-  const bothKind=prevKind==='見積書・申込書';
-  if($('prev-url-one'))$('prev-url-one').classList.toggle('hidden',prevOn&&bothKind);
-  if($('prev-url-both'))$('prev-url-both').classList.toggle('hidden',!(prevOn&&bothKind));
-  let prevLine='同一取引の過去依頼：なし（初回）',prevMissing=false;
-  if(prevOn){
-    if(bothKind){
-      const uq=val('prev-url-q').trim(),ua=val('prev-url-a').trim();
-      prevMissing=!uq||!ua;
-      prevLine=`同一取引の過去依頼：あり（見積書・申込書）\n  見積書：${uq||'※URL未入力'}\n  申込書：${ua||'※URL未入力'}`;
-    } else {
-      const u=val('prev-url').trim();prevMissing=!u;
-      prevLine=`同一取引の過去依頼：あり（${prevKind}）${u?` ${u}`:'　※URL未入力'}`;
-    }
-  }
-  if(prevOn&&prevMissing)flags.push('過去依頼ありですが、SlackのURLが未入力です。');
+  const ctype=judgeContractType();
+  if(!ctype)flags.push('契約種別（直販／代理店／PoC）が未判定です。');
+  const ctLine='契約種別：'+(ctype?`【${ctype}】`:'※未判定');
   const aiSel=$('chk-ai').checked;
   const mainK=['moti','es','hr','roumu'].filter(k=>L[k]);
   const grouped=((aiSel?1:0)+mainK.length+($('chk-sken').checked?1:0))>=2;
@@ -650,9 +667,9 @@ function render(){
 
   const renewLine=renew==='なし'?'自動更新：なし（事業部長承認済み）':`自動更新：${renew}`;
   const freeLine=freeNote?`無料分受検数：${freeNote}`:'';
-  const jimuHead=[renewLine];if(freeLine)jimuHead.push(freeLine);jimuHead.push(prevLine);
+  const jimuHead=[ctLine,renewLine];if(freeLine)jimuHead.push(freeLine);
   $('out-jimu').textContent=jimuHead.join('\n')+'\n'+buildItems(false);
-  const ldHead=[termLine];if(qexp)ldHead.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)ldHead.push(`申込期限：${jpDate(aexp)}`);if(freeLine)ldHead.push(freeLine);
+  const ldHead=[ctLine,termLine];if(qexp)ldHead.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)ldHead.push(`申込期限：${jpDate(aexp)}`);if(freeLine)ldHead.push(freeLine);
   $('out-ld').textContent=ldHead.join('\n')+'\n'+buildItems(true);
   {const hp=[termLine];if(qexp)hp.push(`見積書有効期限：${jpDate(qexp)}`);if(aexp)hp.push(`申込期限：${jpDate(aexp)}`);hp.push(renewLine);$('term-head').textContent=hp.join('　／　');}
 
